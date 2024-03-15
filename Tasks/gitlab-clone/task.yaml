@@ -1,8 +1,8 @@
 # This is a git repository cloning task for Dev Box
 
 $schema: 1.0
-name: git-clone
-description: Clones a git repository.
+name: gitlab-clone
+description: Clones a git repository (including gitlab.com).
 author: Microsoft Corporation
 command: ./main.ps1 -RepositoryUrl {{ repositoryUrl }} -Directory {{ directory }} -Branch {{ branch }} -Pat {{ pat }}
 parameters:
