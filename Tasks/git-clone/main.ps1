@@ -246,11 +246,13 @@ if ($Pat) {
                 # https://dev.azure.com/organization/project-name/_git/Sample-repo.name
                 # https://organization.visualstudio.com/project-name/_git/sample-repo.name
                 # https://organization.visualstudio.com/DefaultCollection/project-name/_git/sample-repo.name
+                # https://gitlab.com/*/sample-repo.git
 
                 $Pattern1 = '^https://(?<org>[a-zA-Z0-9]+)@dev.azure.com/(?<org_dup>[a-zA-Z0-9]+)/(?<project>[\.\-a-zA-Z0-9]+)/_git/(?<reponame>[\.\-a-zA-Z0-9]+)/?$'
                 $Pattern2 = '^https://dev.azure.com/(?<org>[a-zA-Z0-9]+)/(?<project>[\.\-a-zA-Z0-9]+)/_git/(?<reponame>[\.\-a-zA-Z0-9]+)/?$'
                 $Pattern3 = '^https://(?<org>[a-zA-Z0-9]+).visualstudio.com/(?<project>[\.\-a-zA-Z0-9]+)/_git/(?<reponame>[\.\-a-zA-Z0-9]+)/?$'
                 $Pattern4 = '^https://(?<org>[a-zA-Z0-9]+).visualstudio.com/[Dd]efault[Cc]ollection/(?<project>[\.\-a-zA-Z0-9]+)/_git/(?<reponame>[\.\-a-zA-Z0-9]+)/?$'
+                $Pattern5 = '^https://gitlab.com/(?<project>[\.\-a-zA-Z0-9]+)/(?<reponame>[\.\-a-zA-Z0-9]+).git/?$'
 
                 $RepositoryUrl = $RepositoryUrl.ToLower()
                 if ($RepositoryUrl -match $Pattern1) {
@@ -265,15 +267,26 @@ if ($Pat) {
                 elseif ($RepositoryUrl -match $Pattern4) {
                     Write-Output "Match Pattern4"
                 }
+                elseif ($RepositoryUrl -match $Pattern5) {
+                    Write-Output "Match Pattern5"
+                }
                 else {
                     throw "RepositoryUrl doesnot match any known pattern"
                 }
 
-                $NormalizedRepositoryUrl = 'https://{org}:{at}@dev.azure.com/{org}/{project}/_git/{reponame}'
-                $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{org}', $Matches.org)
-                $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{project}', $Matches.project)
-                $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{reponame}', $Matches.reponame)
-                $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{at}', $Pat)
+                if ($RepositoryUrl -match $Pattern5){
+                    $NormalizedRepositoryUrl = 'https://{reponame}:{at}@gitlab.com/{project}/{reponame}.git'
+                    $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{project}', $Matches.project)
+                    $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{reponame}', $Matches.reponame)
+                    $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{at}', $Pat)
+                }
+                else {
+                    $NormalizedRepositoryUrl = 'https://{org}:{at}@dev.azure.com/{org}/{project}/_git/{reponame}'
+                    $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{org}', $Matches.org)
+                    $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{project}', $Matches.project)
+                    $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{reponame}', $Matches.reponame)
+                    $NormalizedRepositoryUrl = $NormalizedRepositoryUrl.Replace('{at}', $Pat)
+                }
 
                 if ($Branch) {
                     git clone -b $Branch $NormalizedRepositoryUrl 3>&1 2>&1
